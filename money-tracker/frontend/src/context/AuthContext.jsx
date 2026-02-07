@@ -33,29 +33,57 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
+    // Safety timeout to prevent infinite loading
+    const safetyTimer = setTimeout(() => {
+      console.warn("Auth check timed out, forcing load completion");
+      if (mounted) setLoading(false);
+    }, 3000);
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (!mounted) return;
+
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchProfile(session.user.id).finally(() => {
+            if (mounted) setLoading(false);
+            clearTimeout(safetyTimer);
+          });
+        } else {
+          if (mounted) setLoading(false);
+          clearTimeout(safetyTimer);
+        }
+      })
+      .catch((err) => {
+        console.error("Session check error:", err);
+        if (mounted) setLoading(false);
+        clearTimeout(safetyTimer);
+      });
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        // Run profile fetch without blocking UI if it's an update
+        fetchProfile(session.user.id);
       } else {
         setProfile(null);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchProfile = async (userId) => {
