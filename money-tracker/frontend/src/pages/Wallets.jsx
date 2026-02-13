@@ -89,7 +89,8 @@ export default function Wallets() {
       setTransferForm({ fromWalletId: "", toWalletId: "", amount: "" });
       fetchWallets();
     } catch (err) {
-      alert(err.response?.data?.error || "Gagal melakukan transfer");
+      console.error(err);
+      alert(err.message || err.response?.data?.error || "Gagal melakukan transfer");
     }
   };
 

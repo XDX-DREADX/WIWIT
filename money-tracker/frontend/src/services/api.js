@@ -61,6 +61,7 @@ export const walletsAPI = {
         destination_wallet_id: to_wallet_id,
         amount: amount,
         type: "transfer",
+        category_id: null,
         date: new Date().toISOString().split("T")[0],
         description: "Transfer",
       })
