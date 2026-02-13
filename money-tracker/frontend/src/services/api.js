@@ -47,28 +47,27 @@ export const walletsAPI = {
     return { data: { success: true } };
   },
   transfer: async ({ from_wallet_id, to_wallet_id, amount }) => {
-    // Get both wallets
-    const { data: fromWallet } = await supabase
-      .from("wallets")
-      .select("*")
-      .eq("id", from_wallet_id)
-      .single();
-    const { data: toWallet } = await supabase
-      .from("wallets")
-      .select("*")
-      .eq("id", to_wallet_id)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Insert transfer transaction
+    // The DB trigger 'update_wallet_balance' will automatically update the wallet balances
+    const { data, error } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: user.id,
+        wallet_id: from_wallet_id,
+        destination_wallet_id: to_wallet_id,
+        amount: amount,
+        type: "transfer",
+        date: new Date().toISOString().split("T")[0],
+        description: "Transfer",
+      })
+      .select()
       .single();
 
-    // Update balances
-    await supabase
-      .from("wallets")
-      .update({ balance: fromWallet.balance - amount })
-      .eq("id", from_wallet_id);
-    await supabase
-      .from("wallets")
-      .update({ balance: toWallet.balance + amount })
-      .eq("id", to_wallet_id);
-
+    if (error) throw error;
     return { data: { success: true } };
   },
 };
@@ -184,26 +183,28 @@ export const transactionsAPI = {
       .single();
     if (error) throw error;
 
-    // Update wallet balance
-    const { data: wallet } = await supabase
-      .from("wallets")
-      .select("balance")
-      .eq("id", transactionData.wallet_id)
-      .single();
+    // Update wallet balance - REMOVED (Handled by DB Trigger)
+    // const { data: wallet } = await supabase
+    //   .from("wallets")
+    //   .select("balance")
+    //   .eq("id", transactionData.wallet_id)
+    //   .single();
 
-    const newBalance =
-      transactionData.type === "income"
-        ? wallet.balance + transactionData.amount
-        : wallet.balance - transactionData.amount;
+    // const newBalance =
+    //   transactionData.type === "income"
+    //     ? wallet.balance + transactionData.amount
+    //     : wallet.balance - transactionData.amount;
 
-    await supabase
-      .from("wallets")
-      .update({ balance: newBalance })
-      .eq("id", transactionData.wallet_id);
+    // await supabase
+    //   .from("wallets")
+    //   .update({ balance: newBalance })
+    //   .eq("id", transactionData.wallet_id);
 
     return { data };
   },
   update: async (id, transactionData) => {
+    // Update wallet balance - REMOVED (Handled by DB Trigger)
+    /*
     // Get old transaction
     const { data: oldTx } = await supabase
       .from("transactions")
@@ -227,6 +228,7 @@ export const transactionsAPI = {
       .from("wallets")
       .update({ balance: revertedBalance })
       .eq("id", oldTx.wallet_id);
+    */
 
     // Update transaction
     const { data, error } = await supabase
@@ -237,6 +239,7 @@ export const transactionsAPI = {
       .single();
     if (error) throw error;
 
+    /*
     // Apply new balance
     const walletId = transactionData.wallet_id || oldTx.wallet_id;
     const { data: newWallet } = await supabase
@@ -256,6 +259,7 @@ export const transactionsAPI = {
       .from("wallets")
       .update({ balance: newBalance })
       .eq("id", walletId);
+    */
 
     return { data };
   },
@@ -267,7 +271,8 @@ export const transactionsAPI = {
       .eq("id", id)
       .single();
 
-    // Revert balance
+    // Revert balance - REMOVED (Handled by DB Trigger)
+    /*
     const { data: wallet } = await supabase
       .from("wallets")
       .select("balance")
@@ -283,6 +288,7 @@ export const transactionsAPI = {
       .from("wallets")
       .update({ balance: newBalance })
       .eq("id", tx.wallet_id);
+    */
 
     // Delete transaction
     const { error } = await supabase.from("transactions").delete().eq("id", id);

@@ -81,8 +81,8 @@ export default function Wallets() {
     e.preventDefault();
     try {
       await walletsAPI.transfer({
-        fromWalletId: parseInt(transferForm.fromWalletId),
-        toWalletId: parseInt(transferForm.toWalletId),
+        from_wallet_id: parseInt(transferForm.fromWalletId),
+        to_wallet_id: parseInt(transferForm.toWalletId),
         amount: parseFloat(transferForm.amount),
       });
       setShowTransferModal(false);
