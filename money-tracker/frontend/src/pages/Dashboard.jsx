@@ -123,7 +123,8 @@ export default function Dashboard() {
       const res = await dashboardAPI.getSummary();
       setData(res.data);
     } catch (err) {
-      setError("Gagal memuat data dashboard");
+      console.error(err);
+      setError(err.message || "Gagal memuat data dashboard");
     } finally {
       setLoading(false);
     }
