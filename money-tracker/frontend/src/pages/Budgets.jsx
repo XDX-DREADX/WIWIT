@@ -24,7 +24,13 @@ export default function Budgets() {
         budgetsAPI.getAll(),
         categoriesAPI.getAll("expense"),
       ]);
-      setBudgets(budgetRes.data);
+      setBudgets(
+        budgetRes.data.map((b) => ({
+          ...b,
+          remaining: b.amount - b.spent,
+          percentage: (b.spent / b.amount) * 100,
+        })),
+      );
       setCategories(catRes.data);
     } catch (err) {
       console.error("Error fetching data:", err);
