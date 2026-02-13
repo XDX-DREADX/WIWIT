@@ -130,7 +130,7 @@ export const transactionsAPI = {
       .select(
         `
         *,
-        wallet:wallets(id, name, icon, color),
+        wallet:wallets!wallet_id(id, name, icon, color),
         category:categories(id, name, icon, color)
       `,
       )
@@ -406,7 +406,7 @@ export const dashboardAPI = {
         .select(
           `
           *,
-          wallet:wallets(id, name, icon, color),
+          wallet:wallets!wallet_id(id, name, icon, color),
           category:categories(id, name, icon, color, type)
         `,
         )
