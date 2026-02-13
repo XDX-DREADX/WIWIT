@@ -75,7 +75,7 @@ export default function Transactions() {
         walletsAPI.getAll(),
         categoriesAPI.getAll(),
       ]);
-      setTransactions(txRes.data.transactions);
+      setTransactions(txRes.data);
       setWallets(walletRes.data);
       setCategories(catRes.data);
     } catch (err) {
@@ -254,14 +254,14 @@ export default function Transactions() {
               <div key={tx.id} className="transaction-item">
                 <div
                   className="transaction-icon"
-                  style={{ background: `${tx.category_color}20` }}
+                  style={{ background: `${tx.category?.color || '#6366f1'}20` }}
                 >
-                  {tx.category_icon}
+                  {tx.category?.icon}
                 </div>
                 <div className="transaction-info">
-                  <div className="transaction-category">{tx.category_name}</div>
+                  <div className="transaction-category">{tx.category?.name}</div>
                   <div className="transaction-description">
-                    {tx.description || "-"} • {tx.wallet_name}
+                    {tx.description || "-"} • {tx.wallet?.name}
                   </div>
                 </div>
                 <div className="transaction-meta">

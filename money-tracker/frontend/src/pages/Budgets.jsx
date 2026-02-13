@@ -36,9 +36,14 @@ export default function Budgets() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const now = new Date();
+      const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        .toISOString()
+        .split("T")[0];
       const payload = {
         ...form,
         amount: parseFloat(form.amount),
+        start_date: startDate,
       };
 
       if (editingId) {
@@ -137,17 +142,17 @@ export default function Budgets() {
                     width: 48,
                     height: 48,
                     borderRadius: "var(--radius-lg)",
-                    background: `${budget.category_color}20`,
+                    background: `${budget.category?.color || '#6366f1'}20`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: "1.25rem",
                   }}
                 >
-                  {budget.category_icon}
+                  {budget.category?.icon}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 600 }}>{budget.category_name}</div>
+                  <div style={{ fontWeight: 600 }}>{budget.category?.name}</div>
                   <div
                     className="text-muted"
                     style={{ fontSize: "var(--font-size-sm)" }}

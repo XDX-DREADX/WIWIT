@@ -1,0 +1,16 @@
+{
+  "name": "money-tracker-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "dev": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:all": "parallelshell \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\"",
+    "build": "npm run build --prefix frontend",
+    "deploy:web": "cd frontend && npx vercel --prod"
+  },
+  "devDependencies": {
+    "parallelshell": "^3.0.1"
+  }
+}

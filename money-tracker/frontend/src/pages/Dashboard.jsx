@@ -65,16 +65,16 @@ const DetailModal = ({
                 <div key={tx.id} className="transaction-item">
                   <div
                     className="transaction-icon"
-                    style={{ background: `${tx.category_color}20` }}
+                    style={{ background: `${tx.category?.color || '#6366f1'}20` }}
                   >
-                    {tx.category_icon}
+                    {tx.category?.icon}
                   </div>
                   <div className="transaction-info">
                     <div className="transaction-category">
-                      {tx.category_name}
+                      {tx.category?.name}
                     </div>
                     <div className="transaction-description">
-                      {tx.description || tx.wallet_name}
+                      {tx.description || tx.wallet?.name}
                     </div>
                   </div>
                   <div className="transaction-meta">
@@ -157,7 +157,7 @@ export default function Dashboard() {
       const res = await transactionsAPI.getAll(params);
       setDetailModal((prev) => ({
         ...prev,
-        transactions: res.data.transactions,
+        transactions: res.data,
         loading: false,
       }));
     } catch (err) {
@@ -216,7 +216,7 @@ export default function Dashboard() {
     labels: [t("income"), t("expense")],
     datasets: [
       {
-        data: [data.monthlyIncome, data.monthlyExpense],
+        data: [data.totalIncome, data.totalExpense],
         backgroundColor: ["rgba(34, 197, 94, 0.8)", "rgba(239, 68, 68, 0.8)"],
         borderColor: ["#22c55e", "#ef4444"],
         borderWidth: 2,
@@ -225,11 +225,11 @@ export default function Dashboard() {
   };
 
   const spendingByCategoryData = {
-    labels: data.spendingByCategory?.map((c) => c.name) || [],
+    labels: data.expensesByCategory?.map((c) => c.name) || [],
     datasets: [
       {
-        data: data.spendingByCategory?.map((c) => c.total) || [],
-        backgroundColor: data.spendingByCategory?.map((c) => c.color) || [],
+        data: data.expensesByCategory?.map((c) => c.total) || [],
+        backgroundColor: data.expensesByCategory?.map((c) => c.color) || [],
         borderWidth: 0,
       },
     ],
@@ -340,7 +340,7 @@ export default function Dashboard() {
               className="stat-card-value text-success"
               style={{ fontSize: "1.2rem" }}
             >
-              {formatCurrency(data.monthlyIncome)}
+              {formatCurrency(data.totalIncome)}
             </div>
           </div>
           <div
@@ -370,7 +370,7 @@ export default function Dashboard() {
               className="stat-card-value text-danger"
               style={{ fontSize: "1.2rem" }}
             >
-              {formatCurrency(data.monthlyExpense)}
+              {formatCurrency(data.totalExpense)}
             </div>
           </div>
           <div
@@ -393,10 +393,10 @@ export default function Dashboard() {
           <div>
             <div className="stat-card-label">Net</div>
             <div
-              className={`stat-card-value ${data.monthlyNet >= 0 ? "text-success" : "text-danger"}`}
+              className={`stat-card-value ${(data.totalIncome - data.totalExpense) >= 0 ? "text-success" : "text-danger"}`}
               style={{ fontSize: "1.2rem" }}
             >
-              {formatCurrency(data.monthlyNet)}
+              {formatCurrency(data.totalIncome - data.totalExpense)}
             </div>
           </div>
           <div
@@ -427,7 +427,7 @@ export default function Dashboard() {
           </h3>
         </div>
         <div className="chart-container" style={{ height: "200px" }}>
-          {data.spendingByCategory?.length > 0 ? (
+          {data.expensesByCategory?.length > 0 ? (
             <Doughnut data={spendingByCategoryData} options={categoryOptions} />
           ) : (
             <div className="empty-state">
@@ -523,26 +523,26 @@ export default function Dashboard() {
                 <div
                   className="transaction-icon"
                   style={{
-                    background: `${tx.category_color}20`,
+                    background: `${tx.category?.color || '#6366f1'}20`,
                     width: 36,
                     height: 36,
                     fontSize: "1rem",
                   }}
                 >
-                  {tx.category_icon}
+                  {tx.category?.icon}
                 </div>
                 <div className="transaction-info">
                   <div
                     className="transaction-category"
                     style={{ fontSize: "0.9rem" }}
                   >
-                    {tx.category_name}
+                    {tx.category?.name}
                   </div>
                   <div
                     className="transaction-description"
                     style={{ fontSize: "0.8rem" }}
                   >
-                    {tx.description || tx.wallet_name}
+                    {tx.description || tx.wallet?.name}
                   </div>
                 </div>
                 <div className="transaction-meta">
