@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { transactionsAPI, reportsAPI, dashboardAPI } from "../services/api";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 export default function Reports() {
   const [summary, setSummary] = useState(null);
@@ -30,17 +33,62 @@ export default function Reports() {
   const handleExportPDF = async () => {
     setExporting(true);
     try {
+      // Fetch data
       const response = await reportsAPI.exportPDF(dateRange);
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `laporan-keuangan-${dateRange.start_date}-${dateRange.end_date}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const transactions = response.data;
+
+      // Create PDF
+      const doc = new jsPDF();
+
+      // Title
+      doc.setFontSize(18);
+      doc.text("Laporan Keuangan", 14, 22);
+      doc.setFontSize(11);
+      doc.text(
+        `Periode: ${dateRange.start_date} s/d ${dateRange.end_date}`,
+        14,
+        30,
+      );
+
+      // Table
+      const tableColumn = [
+        "Tanggal",
+        "Tipe",
+        "Kategori",
+        "Wallet",
+        "Jumlah",
+        "Keterangan",
+      ];
+      const tableRows = [];
+
+      transactions.forEach((tx) => {
+        const transactionData = [
+          tx.date,
+          tx.type === "income"
+            ? "Pemasukan"
+            : tx.type === "expense"
+              ? "Pengeluaran"
+              : "Transfer",
+          tx.category?.name || "-",
+          tx.wallet?.name || "-",
+          formatCurrency(tx.amount),
+          tx.description || "-",
+        ];
+        tableRows.push(transactionData);
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 35,
+      });
+
+      // Save
+      doc.save(
+        `laporan-keuangan-${dateRange.start_date}-${dateRange.end_date}.pdf`,
+      );
     } catch (err) {
+      console.error(err);
       alert("Gagal mengekspor PDF");
     } finally {
       setExporting(false);
@@ -50,19 +98,37 @@ export default function Reports() {
   const handleExportExcel = async () => {
     setExporting(true);
     try {
+      // Fetch data
       const response = await reportsAPI.exportExcel(dateRange);
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `laporan-keuangan-${dateRange.start_date}-${dateRange.end_date}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const transactions = response.data;
+
+      // Format data for Excel
+      const data = transactions.map((tx) => ({
+        Tanggal: tx.date,
+        Tipe:
+          tx.type === "income"
+            ? "Pemasukan"
+            : tx.type === "expense"
+              ? "Pengeluaran"
+              : "Transfer",
+        Kategori: tx.category?.name || "-",
+        Wallet: tx.wallet?.name || "-",
+        Jumlah: Number(tx.amount),
+        Keterangan: tx.description || "-",
+      }));
+
+      // Create Worksheet
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+
+      // Save
+      XLSX.writeFile(
+        wb,
+        `laporan-keuangan-${dateRange.start_date}-${dateRange.end_date}.xlsx`,
+      );
     } catch (err) {
+      console.error(err);
       alert("Gagal mengekspor Excel");
     } finally {
       setExporting(false);
